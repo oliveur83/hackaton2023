@@ -64,14 +64,15 @@ function dijkstra(graph: Graph, start: string): { [key: string]: number } {
     return distances;
 }
 
-function convertToGraph(poubellesGPS: string[]): Graph {
+function convertToGraph(poubellesGPS: string[],toto: string[]): Graph {
     const graph: Graph = {};
 
     for (let i = 0; i < poubellesGPS.length; i++) {
         for (let j = i + 1; j < poubellesGPS.length; j++) {
 
             const distance = calculateDistance(poubellesGPS[i], poubellesGPS[j]);
-            
+            const cout= distance+Number(toto[j])
+          
             if (!graph[poubellesGPS[i]]) {
                 graph[poubellesGPS[i]] = {};
             }
@@ -79,8 +80,8 @@ function convertToGraph(poubellesGPS: string[]): Graph {
                 graph[poubellesGPS[j]] = {};
             }
 
-            graph[poubellesGPS[i]][poubellesGPS[j]] = distance;
-            graph[poubellesGPS[j]][poubellesGPS[i]] = distance;
+            graph[poubellesGPS[i]][poubellesGPS[j]] = cout;
+            graph[poubellesGPS[j]][poubellesGPS[i]] = cout;
         }
     }
 
@@ -138,9 +139,61 @@ function calculateDistance(coord1: string, coord2: string): number {
     return distance;
 }
 
+function convertToDMS(coord: number, type: 'latitude' | 'longitude'): string {
+    const isNegative = coord < 0;
+    coord = Math.abs(coord);
+
+    const degrees = Math.floor(coord);
+    const minutesFloat = (coord - degrees) * 60;
+    const minutes = Math.floor(minutesFloat);
+    const seconds = Math.floor((minutesFloat - minutes) * 60);
+
+    let direction = '';
+    if (type === 'latitude') {
+        direction = isNegative ? 'S' : 'N';
+    } else if (type === 'longitude') {
+        direction = isNegative ? 'W' : 'E';
+    }
+
+    return `${degrees}°${minutes}'${seconds}"${direction}`;
+}
+
+function TriageWithNewPoint(poubellesGPS: string[], actualCoord: string): string[] {
+    const newPoubellesGPS: string[] = [];
+
+    newPoubellesGPS.push(actualCoord);
+
+    poubellesGPS.forEach((value) => {
+        newPoubellesGPS.push(value);
+    });
+
+    return newPoubellesGPS; 
+}
+
+function renewGps(djikstra: any[]): string[] {
+    let newTab: string[] = [];
+
+    for (let i = 0; i < djikstra.length; i++) {
+        newTab.push(djikstra[i][0]);
+    }
+    
+    return newTab;
+}
 
 export const ville_gps = (req: express.Request, res: express.Response) => {
     try {
+
+        const { latitude, longitude } = req.body;
+
+        // const latitude: number = 42.614167;
+        // const longitude: number = 9.354722;
+
+        const latitudeDMS: string = convertToDMS(latitude, 'latitude');
+        const longitudeDMS: string = convertToDMS(longitude, 'longitude');
+
+        const actualCoord: string = `${latitudeDMS} ${longitudeDMS}`;
+
+
         const excelFilePath = path.join(__dirname, '../data.xlsx');
         const workbook = XLSX.readFile(excelFilePath);
 
@@ -148,50 +201,81 @@ export const ville_gps = (req: express.Request, res: express.Response) => {
         const data: PoubelleData[] = XLSX.utils.sheet_to_json(worksheet);
 
         // Récupérer les données GPS pour toutes les poubelles
-        const poubellesGPS: string[] = [];
-
+        var poubellesGPS: string[] = [];
+        var poubellesramp: string[] = [];
         for (let i = 1; i < data.length; i++) {
             const poubelleData: PoubelleData = data[i];
-            
             // Pour chaque poubelle, ajouter les coordonnées GPS à la liste
             for (let j = 1; j <= 7; j++) {
+                const co=j*2
                 const poubelleGPS: string = poubelleData[`poubelle ${j}`] as string;
+                const poubelleramp: string = poubelleData[`__EMPTY_${co}`] as string;
+                
                 if (poubelleGPS) {
                     poubellesGPS.push(poubelleGPS);
+                    poubellesramp.push(poubelleramp);
                 }
             }
         }
+    console.log(poubellesramp)
+        //Pour rajouter les coordonnées récupérer en post, pour le mettre comme point de depart
+        poubellesGPS = TriageWithNewPoint(poubellesGPS, actualCoord);
 
+        // for (const key in poubellesGPS) {
+        //     let value = poubellesGPS[key];
+
+        //     console.log(key, value);
+        // }
 
          // Convertir les coordonnées GPS en une structure de graphe
- 
          const poubellesSupprimees = [];
-// Tant que le tableau de poubelles n'est pas vide
-while (poubellesGPS.length > 0) {
-    // Exécuter Dijkstra à partir d'un nœud de départ
-    const startNode = poubellesGPS[0];
-    const shortestDistances = dijkstra(convertToGraph(poubellesGPS), startNode);
+        var it: number = 0;
+        var startNode: string;
+        // Tant que le tableau de poubelles n'est pas vide
+        while (poubellesGPS.length > 1) {
+            // Exécuter Dijkstra à partir d'un nœud de départ
+            if (it === 0) {
+                startNode = poubellesGPS[0];
+                it = 1;
+            }
+            const shortestDistances = dijkstra(convertToGraph(poubellesGPS,poubellesramp), startNode);
+            
+            // Convertir l'objet en tableau de paires clé-valeur
+            const distancesArray = Object.entries(shortestDistances);
 
-    // Convertir l'objet en tableau de paires clé-valeur
-    const distancesArray = Object.entries(shortestDistances);
+            // Trier le tableau en fonction des distances (de la plus courte à la plus longue)
+            distancesArray.sort((a, b) => a[1] - b[1]);
 
-    // Trier le tableau en fonction des distances (de la plus courte à la plus longue)
-    distancesArray.sort((a, b) => a[1] - b[1]);
+            //Regarder le chemin le plus cours
+            let dist: number;
+            let sPoint: string;
+           
 
-    // Le point GPS le plus court est maintenant dans la première position du tableau
-    const shortestPoint = distancesArray[0][0];
-    const shortestDistance = distancesArray[0][1];
-    poubellesSupprimees.push(shortestPoint);
-    console.log("Point GPS le plus court :", shortestPoint);
-    console.log("Distance la plus courte :", shortestDistance);
 
-    // Supprimer la poubelle GPS associée au point le plus court
-    const indexToRemove = poubellesGPS.findIndex(poubelle => poubelle === shortestPoint);
-    if (indexToRemove !== -1) {
-        poubellesGPS.splice(indexToRemove, 1);
-    }
-}
+            // Le point GPS le plus court est maintenant dans la première position du tableau
+            const actualPoint = distancesArray[0][0];
+            const shortestPoint = distancesArray[1][0];
+            startNode = shortestPoint;
+            const shortestDistance = distancesArray[1][1];
+            
+            poubellesSupprimees.push(distancesArray[0][0]);
+            // console.log("Point GPS actuel :", actualPoint);
+            // console.log("Point GPS le plus court :", shortestPoint);
+            // console.log("Distance la plus courte :", shortestDistance);
 
+            // Supprimer la poubelle GPS associée au point le plus court
+            const indexToRemove = poubellesGPS.findIndex(poubelle => poubelle === distancesArray[0][0]);
+            if (indexToRemove !== -1) {
+                poubellesGPS.splice(indexToRemove, 1);
+            }
+
+            if (poubellesGPS.length == 1) {
+                poubellesSupprimees.push(shortestPoint);
+            }   
+
+
+        }
+        console.log(poubellesSupprimees)
         res.status(200).json({poubellesSupprimees });
     } catch (error) {
         console.log(error);
