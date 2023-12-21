@@ -1,11 +1,14 @@
-# hackaton2023
+# Hackathon 2023 - Coding Challenge
   
 
-Défi SITEC : gestion de données et cartographie (le sujet peut encore évoluer)
+Défi SITEC : "Smart Waste Manager - Optimisation de la Collecte des Déchets par IA"
 
-collaborateur :
-Tom OLIVIER
-MOHAMED ismael OTBAN
-Mehdi GHOULAM
-Asmae EL HALAF 
+
+# Collaborateur
+
+![Tom OLIVIER]()
+![Mohamed Ismael OTBAN]()
+![Mehdi GHOULAM]()
+![Asmae EL HALAF]()
+
 
