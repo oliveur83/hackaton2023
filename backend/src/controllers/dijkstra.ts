@@ -69,6 +69,7 @@ function convertToGraph(poubellesGPS: string[]): Graph {
 
     for (let i = 0; i < poubellesGPS.length; i++) {
         for (let j = i + 1; j < poubellesGPS.length; j++) {
+
             const distance = calculateDistance(poubellesGPS[i], poubellesGPS[j]);
             
             if (!graph[poubellesGPS[i]]) {
