@@ -4,8 +4,6 @@ import express from 'express';
 import { all_ville } from '../controllers/dijkstra';
 import { ville_gps } from '../controllers/dijkstra'; 
 
-import { getCommune, getCommuneDate } from '../controllers/recupDonnee';
-
 const router = express.Router();
 
 // Définition et exportation de la fonction qui renvoie le routeur
