@@ -10,5 +10,7 @@ export const dijkstra = (req: express.Request, res: express.Response) => {
 }
 function chemin_de_dijkstra()
 {
-    
+
 }
+
+// note : plus influence plus elle se remplie vite 
