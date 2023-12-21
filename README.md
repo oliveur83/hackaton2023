@@ -6,9 +6,8 @@ Défi SITEC : "Smart Waste Manager - Optimisation de la Collecte des Déchets pa
 
 # Collaborateur
 
-![Tom OLIVIER]()
-![Mohamed Ismael OTBAN]()
-![Mehdi GHOULAM]()
-![Asmae EL HALAF]()
-
+- [Tom OLIVIER]()
+- [Mohamed Ismael OTBAN]()
+- [Mehdi GHOULAM]()
+- [Asmae EL HALAF]()
 
