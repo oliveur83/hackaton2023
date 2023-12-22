@@ -5,6 +5,7 @@ import { getCommune, getCommuneDate, modifFile } from '../controllers/recupDonne
 import { isAuthenticated } from '../middlewares/index';
 import { register, login, logout } from '../controllers/authentication';
 import { allUsers } from '../controllers/users';
+import { model } from '../controllers/model'; 
 
 const router = express.Router();
 
@@ -13,7 +14,8 @@ export default () => {
  
     //API CARTE
     router.get('/all_ville', all_ville);
-    router.post('/dijkstra', ville_gps);
+    // router.post('/dijkstra', ville_gps);
+    router.post('/dijkstra/:date', ville_gps);
 
     router.get('/communes/:nom', getCommune);
     router.get('/communes/:nom/:date', getCommuneDate);
@@ -24,9 +26,10 @@ export default () => {
     router.post('/auth/register', register);
     router.post('/auth/login', login);
     router.post('/auth/logout', logout);
-
     router.get('/users', isAuthenticated, allUsers);
     // router.get('/users', allUsers);
+
+    router.get('/model/:commune', model);
 
     return router;
 };

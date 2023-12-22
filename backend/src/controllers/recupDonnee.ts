@@ -83,6 +83,7 @@ const frenchDateToEnglish = (date: string): string => {
                 }
 }
 
+
 export const getCommuneDate = (req: express.Request, res: express.Response) => {
     try {
         var { nom, date } = req.params;
@@ -102,12 +103,12 @@ export const getCommuneDate = (req: express.Request, res: express.Response) => {
         let ifEnglish: boolean = englishDateFormat.test(date);
 
         if (ifFrench) {
-                date = frenchDateToEnglish(date);
+            date = frenchDateToEnglish(date);
+        } else {
+            if (!ifEnglish) {
+                return res.status(400).json({erreur: "Mauvaise type de date"});
+            }
         }
-
-        if (!ifEnglish) {
-            return res.status(400).json({erreur: "Mauvaise type de date"});
-        } 
 
         for (let i = 0 ; i < data.length ; i++) {
             if (data[i].date == date) {

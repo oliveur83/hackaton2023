@@ -187,9 +187,23 @@ function TriageWithNewPoint(poubellesGPS: string[], actualCoord: string): string
  * Route pour calculer l'itinéraire optimal des poubelles en utilisant les coordonnées GPS.
  */
 
+const frenchDateToEnglish = (date: string): string => {
+    const dateParts = date.split('-'); // Sépare la date en parties
+                if (dateParts.length === 3) {
+                    const year = dateParts[2];
+                    const month = dateParts[1];
+                    const day = dateParts[0];
+            
+                    const americanDate = `${year}-${month}-${day}`;
+
+                    return americanDate;
+                }
+}
+
 export const ville_gps = (req: express.Request, res: express.Response) => {
     try {
         const { latitude, longitude } = req.body;
+        var { date } = req.params;
         const latitudeDMS = convertToDMS(latitude, 'latitude');
         const longitudeDMS = convertToDMS(longitude, 'longitude');
         const actualCoord = `${latitudeDMS} ${longitudeDMS}`;
@@ -199,6 +213,24 @@ export const ville_gps = (req: express.Request, res: express.Response) => {
         const workbook = XLSX.readFile(excelFilePath);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const data: PoubelleData[] = XLSX.utils.sheet_to_json(worksheet);
+
+        const frenchDateFormat = /\d{2}\-\d{2}\-\d{4}$/;
+
+        const englishDateFormat = /\d{4}\-\d{2}\-\d{2}$/;
+
+        let ifFrench: boolean = frenchDateFormat.test(date);
+
+        let ifEnglish: boolean = englishDateFormat.test(date);
+
+        if (ifFrench) {
+                date = frenchDateToEnglish(date);
+        } else {
+            if (!ifEnglish) {
+                return res.status(400).json({erreur: "Mauvaise type de date"});
+            }
+        }
+
+        console.log(date) // Affichage de la date
 
         // Extraction et traitement des données GPS
         var poubellesGPS: string[] = [];
@@ -219,7 +251,6 @@ export const ville_gps = (req: express.Request, res: express.Response) => {
             }
         }
 
-    console.log(poubellesramp)
         //Pour rajouter les coordonnées récupérer en post, pour le mettre comme point de depart
         poubellesGPS = TriageWithNewPoint(poubellesGPS, actualCoord);
 
