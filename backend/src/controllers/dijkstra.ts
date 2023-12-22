@@ -181,6 +181,7 @@ function renewGps(djikstra: any[]): string[] {
 }
 
 export const ville_gps = (req: express.Request, res: express.Response) => {
+   
     try {
 
         const { latitude, longitude } = req.body;
